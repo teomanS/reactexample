@@ -1,0 +1,49 @@
+metadata:
+  labels:
+    podpurpose: mavenbuild
+spec:
+  containers:
+  - name: jnlp
+    image: jenkins/jnlp-agent-alpine:latest
+    volumeMounts:
+    - name: home-volume
+      mountPath: /home/jenkins    
+    env:
+    - name: CONTAINER_ENV_VAR
+      value: jnlp    
+    - name: HOME
+      value: /home/jenkins  
+    - name: JENKINS_URL
+      value: http://jenkins-svc
+    - name: JENKINS_TUNNEL
+      value: jenkins-svc:50000
+    workingDir: /home/jenkins/agent  
+  - name: dind
+    image: docker:18.05-dind
+    volumeMounts:
+    - name: home-volume
+      mountPath: /home/jenkins   
+    - name: dind-storage
+      mountPath: /var/lib/docker        
+    - name: dockerkey
+      mountPath: /etc/docker/key.json
+      subPath: key.json
+    - name: dockerdaemon
+      mountPath: /etc/docker/daemon.json
+      subPath: daemon.json      
+    securityContext:
+      privileged: true               
+  volumes:
+  - name: home-volume
+    emptyDir: {}  
+  - name: dind-storage
+    emptyDir: {}    
+  - name: settingsxml
+    secret:
+      secretName: settingtest    
+  - name: dockerkey
+    configMap:
+      name: dockerkeys    
+  - name: dockerdaemon
+    configMap:
+      name: insecureregistery       
